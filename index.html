@@ -1,28 +1,29 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jogo de Dominó</title>
+  <title>Jogo de Damas</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <canvas id="particles-canvas"></canvas>
   <div class="container">
-    <div class="card" id="login">
-      <h1>Jogo de Dominó</h1>
-      <h2>Escolha seu jogador</h2>
-      <button onclick="login('Ewerton')">Ewerton (Preto)</button>
-      <button onclick="login('Hellen')">Hellen (Amarelo)</button>
-    </div>
-    <div class="card" id="game" style="display: none;">
-      <h1>Jogo de Dominó</h1>
-      <div id="info">Conectando ao servidor...</div>
-      <div id="player-hand"></div>
-      <div id="board"></div>
+    <div class="card">
+      <div id="login">
+        <h1>Jogo de Damas</h1>
+        <h2>Escolha seu jogador</h2>
+        <button onclick="login('Ewerton')">Ewerton (Preto)</button>
+        <button onclick="login('Hellen')">Hellen (Roxo)</button>
+      </div>
+      <div id="game" style="display: none;">
+        <h1>Jogo de Damas</h1>
+        <div id="info">Conectando ao servidor...</div>
+        <div id="board"></div>
+      </div>
     </div>
   </div>
-  <script src="script.js"></script>
   <script src="particles.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

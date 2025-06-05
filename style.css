@@ -1,10 +1,9 @@
 :root {
-  --primary: #FFD700;
+  --primary: #800080;
   --background: #121212;
   --text: #fff;
   --border-radius: 12px;
-  --tile-width: 60px;
-  --tile-height: 30px;
+  --cell-size: 60px;
   --light-square: #f0d9b5;
   --dark-square: #b58863;
 }
@@ -45,14 +44,14 @@ body {
 .container {
   z-index: 2;
   width: 100%;
-  max-width: 800px;
+  max-width: 600px;
 }
 
 .card {
   background-color: #1e1e1e;
   padding: 30px;
   border-radius: var(--border-radius);
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 15px rgba(128, 0, 128, 0.5);
   text-align: center;
   animation: fadeIn 0.6s ease-in-out;
 }
@@ -80,55 +79,59 @@ button:hover {
 }
 
 #board {
-  position: relative;
-  min-height: 400px;
-  background-color: var(--dark-square);
-  border-radius: var(--border-radius);
-  margin-top: 20px;
-  overflow: auto;
-}
-
-#player-hand {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(8, var(--cell-size));
+  grid-gap: 2px;
   justify-content: center;
   margin-top: 20px;
 }
 
-.tile {
-  width: var(--tile-width);
-  height: var(--tile-height);
-  border-radius: 5px;
+.cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  font-weight: bold;
-  position: absolute;
   cursor: pointer;
+  background-color: var(--light-square);
 }
 
-.tile.black {
+.cell.dark {
+  background-color: var(--dark-square);
+}
+
+.piece {
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.piece.black {
   background-color: #000;
   color: #fff;
 }
 
-.tile.yellow {
-  background-color: #FFD700;
-  color: #000;
+.piece.purple {
+  background-color: #800080;
+  color: #fff;
 }
 
-.tile.selected {
-  background-color: #33ff33;
+.piece.king::after {
+  content: "K";
+  font-size: 16px;
 }
 
-.valid-spot {
-  width: var(--tile-width);
-  height: var(--tile-height);
+.cell.selected {
+  background-color: #993399;
+}
+
+.cell.valid-move {
   background-color: #33ff33;
-  opacity: 0.5;
-  position: absolute;
   cursor: pointer;
 }
 
@@ -139,8 +142,7 @@ button:hover {
 
 @media (max-width: 480px) {
   :root {
-    --tile-width: 40px;
-    --tile-height: 20px;
+    --cell-size: 40px;
   }
 
   button {
@@ -148,11 +150,11 @@ button:hover {
     margin: 10px 0;
   }
 
-  .card {
-    padding: 20px;
+  #board {
+    grid-gap: 1px;
   }
 
-  .tile {
-    font-size: 12px;
+  .card {
+    padding: 20px;
   }
 }

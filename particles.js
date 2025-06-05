@@ -18,7 +18,7 @@ document.addEventListener("mousemove", (e) => {
       y: e.clientY,
       size: Math.random() * 18 + 12,
       alpha: 1,
-      char: Math.random() < 0.5 ? "●" : "|",
+      char: Math.random() < 0.5 ? "●" : "K",
       dx: (Math.random() - 0.5) * 2,
       dy: (Math.random() - 0.5) * 2
     });
@@ -31,7 +31,7 @@ function animate() {
   particles.forEach((p, index) => {
     ctx.globalAlpha = p.alpha;
     ctx.font = `${p.size}px Segoe UI`;
-    ctx.fillStyle = "#FFD700";
+    ctx.fillStyle = "#800080";
     ctx.fillText(p.char, p.x, p.y);
 
     p.x += p.dx;
