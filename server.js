@@ -16,61 +16,63 @@ let gameState = { ...initialGameState, players: [] };
 
 app.use(express.static(path.join(__dirname, ".")));
 
-// Função para verificar movimentos válidos
-function getValidMoves(piece, board) {
-  const moves = [];
-  const captures = [];
-  const { row, col, color, isKing } = piece;
-  const directions = color === "purple" ? (isKing ? [[-1, -1], [-1, 1], [1, -1], [1, 1]] : [[-1, -1], [-1, 1]]) : (isKing ? [[-1, -1], [-1, 1], [1, -1], [1, 1]] : [[1, -1], [1, 1]]);
-
-  for (const [dr, dc] of directions) {
-    const newRow = row + dr;
-    const newCol = col + dc;
-    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
-      const target = board[newRow * 8 + newCol];
-      if (!target) {
-        moves.push({ row: newRow, col: newCol });
-      }
-      // Verificar captura
-      const jumpRow = row + 2 * dr;
-      const jumpCol = col + 2 * dc;
-      if (jumpRow >= 0 && jumpRow < 8 && jumpCol >= 0 && jumpCol < 8) {
-        const jumped = board[(row + dr) * 8 + (col + dc)];
-        if (jumped && jumped.color !== color && !board[jumpRow * 8 + jumpCol]) {
-          captures.push({ row: jumpRow, col: jumpCol, jumped: (row + dr) * 8 + (col + dc) });
-        }
-      }
+// Função para gerar dominós
+function generateDominoes() {
+  const tiles = [];
+  for (let i = 0; i <= 6; i++) {
+    for (let j = i; j <= 6; j++) {
+      tiles.push({ left: i, right: j });
     }
   }
-  return { moves, captures };
+  return tiles.sort(() => Math.random() - 0.5);
 }
 
-// Verificar se há capturas disponíveis
-function hasCaptures(board, color) {
-  return board.some(piece => piece && piece.color === color && getValidMoves(piece, board).captures.length > 0);
+// Função para obter posições válidas de colocação
+function getValidPlacements(board, tile) {
+  if (board.length === 0) {
+    return [{ index: 0, x: 300, y: 300, side: "left", flip: false }];
+  }
+  const placements = [];
+  const leftEnd = board[0].left;
+  const rightEnd = board[board.length - 1].right;
+  if (tile.left === leftEnd || tile.right === leftEnd) {
+    placements.push({ index: 0, x: board[0].x - 60, y: board[0].y, side: "left", flip: tile.right === leftEnd });
+  }
+  if (tile.left === rightEnd || tile.right === rightEnd) {
+    placements.push({ index: board.length, x: board[board.length - 1].x + 60, y: board[board.length - 1].y, side: "right", flip: tile.left === rightEnd });
+  }
+  return placements;
 }
 
 // Verificar vencedor
-function checkWinner(board) {
-  const purplePieces = board.filter(piece => piece && piece.color === "purple").length;
-  const blackPieces = board.filter(piece => piece && piece.color === "black").length;
-  if (purplePieces === 0) return "Ewerton";
-  if (blackPieces === 0) return "Hellen";
-  if (!board.some(piece => piece && piece.color === "purple" && (getValidMoves(piece, board).moves.length > 0 || getValidMoves(piece, board).captures.length > 0))) return "Ewerton";
-  if (!board.some(piece => piece && piece.color === "black" && (getValidMoves(piece, board).moves.length > 0 || getValidMoves(piece, board).captures.length > 0))) return "Hellen";
+function checkWinner(hands, board, boneyard) {
+  if (hands.Ewerton.length === 0) return "Ewerton";
+  if (hands.Hellen.length === 0) return "Hellen";
+  const ewertonCanPlay = hands.Ewerton.some(tile => getValidPlacements(board, tile).length > 0);
+  const hellenCanPlay = hands.Hellen.some(tile => getValidPlacements(board, tile).length > 0);
+  if (!ewertonCanPlay && !hellenCanPlay && boneyard.length === 0) {
+    const ewertonSum = hands.Ewerton.reduce((sum, tile) => sum + tile.left + tile.right, 0);
+    const hellenSum = hands.Hellen.reduce((sum, tile) => sum + tile.left + tile.right, 0);
+    return ewertonSum < hellenSum ? "Ewerton" : hellenSum < ewertonSum ? "Hellen" : null;
+  }
   return null;
 }
 
 // Função para resetar o jogo
 function resetGame() {
   const nextStarter = gameState.turn === "Ewerton" ? "Hellen" : "Ewerton";
+  const tiles = generateDominoes();
   gameState = {
-    board: initialGameState.board.map(piece => piece ? { ...piece } : null),
+    board: [],
+    hands: {
+      Ewerton: tiles.slice(0, 6),
+      Hellen: tiles.slice(6, 12)
+    },
+    boneyard: tiles.slice(12),
     turn: nextStarter,
     winner: null,
-    selectedPiece: null,
-    validMoves: [],
-    validCaptures: [],
+    selectedTile: null,
+    validPlacements: [],
     players: gameState.players
   };
 }
@@ -93,6 +95,9 @@ wss.on("connection", (ws) => {
       if (["Ewerton", "Hellen"].includes(data.player) && !gameState.players.includes(data.player)) {
         gameState.players.push(data.player);
         ws.player = data.player;
+        if (gameState.players.length === 2 && !gameState.hands.Ewerton.length) {
+          resetGame(); // Distribute tiles when both players are connected
+        }
         broadcastGameState();
       } else {
         ws.send(JSON.stringify({ type: "error", message: "Jogador já conectado ou inválido." }));
@@ -101,44 +106,49 @@ wss.on("connection", (ws) => {
     }
 
     if (data.type === "select" && !gameState.winner && data.player === gameState.turn) {
-      const piece = gameState.board[data.index];
-      if (piece && piece.color === (data.player === "Ewerton" ? "black" : "purple")) {
-        const { moves, captures } = getValidMoves(piece, gameState.board);
-        if (hasCaptures(gameState.board, piece.color)) {
-          gameState.validMoves = [];
-          gameState.validCaptures = captures;
-        } else {
-          gameState.validMoves = moves;
-          gameState.validCaptures = [];
-        }
-        gameState.selectedPiece = data.index;
+      const tile = gameState.hands[data.player][data.index];
+      if (tile) {
+        gameState.selectedTile = data.index;
+        gameState.validPlacements = getValidPlacements(gameState.board, tile);
         broadcastGameState();
       }
     }
 
-    if (data.type === "move" && !gameState.winner && data.player === gameState.turn) {
-      const { fromIndex, toIndex } = data;
-      const piece = gameState.board[fromIndex];
-      if (piece && piece.color === (data.player === "Ewerton" ? "black" : "purple")) {
-        const { moves, captures } = getValidMoves(piece, gameState.board);
-        const move = moves.find(m => m.row * 8 + m.col === toIndex);
-        const capture = captures.find(c => c.row * 8 + c.col === toIndex);
-        if (move || capture) {
-          gameState.board[toIndex] = { ...piece, row: Math.floor(toIndex / 8), col: toIndex % 8 };
-          gameState.board[fromIndex] = null;
-          if (capture) {
-            gameState.board[capture.jumped] = null;
-          }
-          // Verificar promoção para rei
-          if (piece.color === "purple" && Math.floor(toIndex / 8) === 0) piece.isKing = true;
-          if (piece.color === "black" && Math.floor(toIndex / 8) === 7) piece.isKing = true;
-          gameState.turn = gameState.turn === "Ewerton" ? "Hellen" : "Ewerton";
-          gameState.selectedPiece = null;
-          gameState.validMoves = [];
-          gameState.validCaptures = [];
-          gameState.winner = checkWinner(gameState.board);
-          broadcastGameState();
+    if (data.type === "place" && !gameState.winner && data.player === gameState.turn) {
+      const tile = gameState.hands[data.player][data.tileIndex];
+      const placement = gameState.validPlacements.find(p => p.index === data.spotIndex);
+      if (tile && placement) {
+        const newTile = { ...tile, x: placement.x, y: placement.y, rotation: 0, color: data.player === "Ewerton" ? "black" : "yellow" };
+        if (placement.flip) [newTile.left, newTile.right] = [newTile.right, newTile.left];
+        if (placement.side === "left") {
+          gameState.board.unshift(newTile);
+        } else {
+          gameState.board.push(newTile);
         }
+        gameState.hands[data.player].splice(data.tileIndex, 1);
+        gameState.turn = gameState.turn === "Ewerton" ? "Hellen" : "Ewerton";
+        gameState.selectedTile = null;
+        gameState.validPlacements = [];
+        gameState.winner = checkWinner(gameState.hands, gameState.board, gameState.boneyard);
+        broadcastGameState();
+      }
+    }
+
+    if (data.type === "draw" && !gameState.winner && data.player === gameState.turn) {
+      if (gameState.boneyard.length > 0) {
+        const tile = gameState.boneyard.shift();
+        gameState$hands[data.player].push(tile);
+        // Check if the drawn tile can be played
+        const canPlay = gameState.hands[data.player].some(t => getValidPlacements(gameState.board, t).length > 0);
+        if (!canPlay && gameState.boneyard.length > 0) {
+          // Player still can't play, keep their turn
+        } else {
+          gameState.turn = gameState.turn === "Ewerton" ? "Hellen" : "Ewerton";
+        }
+        gameState.selectedTile = null;
+        gameState.validPlacements = [];
+        gameState.winner = checkWinner(gameState.hands, gameState.board, gameState.boneyard);
+        broadcastGameState();
       }
     }
 

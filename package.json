@@ -1,7 +1,7 @@
 {
-  "name": "checkers",
+  "name": "domino",
   "version": "1.0.0",
-  "description": "A multiplayer Checkers game",
+  "description": "A multiplayer Domino game",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

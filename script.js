@@ -1,6 +1,9 @@
 let player = null;
 const boardDiv = document.getElementById("board");
+const handDiv = document.getElementById("player-hand");
 const info = document.getElementById("info");
+const boneyardCount = document.getElementById("boneyard-count");
+const drawButton = document.getElementById("draw-button");
 let ws;
 
 function login(name) {
@@ -32,39 +35,69 @@ function login(name) {
   };
 }
 
+function drawTile() {
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    info.textContent = "Não conectado ao servidor. Tente recarregar.";
+    return;
+  }
+  ws.send(JSON.stringify({ type: "draw", player }));
+}
+
 function render(game) {
   boardDiv.innerHTML = "";
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
-      const index = row * 8 + col;
-      const div = document.createElement("div");
-      div.className = `cell ${(row + col) % 2 === 1 ? "dark" : ""}`;
-      if (game.selectedPiece === index) {
-        div.classList.add("selected");
-      }
-      if (game.validMoves.some(m => m.row * 8 + m.col === index) || game.validCaptures.some(c => c.row * 8 + c.col === index)) {
-        div.classList.add("valid-move");
-      }
-      const piece = game.board[index];
-      if (piece) {
-        const pieceDiv = document.createElement("div");
-        pieceDiv.className = `piece ${piece.color}${piece.isKing ? " king" : ""}`;
-        div.appendChild(pieceDiv);
-      }
-      div.onclick = () => {
-        if (!ws || ws.readyState !== WebSocket.OPEN) {
-          info.textContent = "Não conectado ao servidor. Tente recarregar.";
-          return;
-        }
-        if (game.selectedPiece != null && (game.validMoves.some(m => m.row * 8 + m.col === index) || game.validCaptures.some(c => c.row * 8 + c.col === index))) {
-          ws.send(JSON.stringify({ type: "move", fromIndex: game.selectedPiece, toIndex: index, player }));
-        } else if (game.board[index] && game.board[index].color === (player === "Ewerton" ? "black" : "purple") && game.turn === player) {
-          ws.send(JSON.stringify({ type: "select", index, player }));
-        }
-      };
-      boardDiv.appendChild(div);
+  handDiv.innerHTML = "";
+  boneyardCount.textContent = game.boneyard.length;
+
+  // Show draw button if it's player's turn and no valid moves
+  const canPlay = game.hands[player]?.some(tile => getValidPlacements(game.board, tile).length > 0);
+  drawButton.style.display = game.turn === player && !canPlay && game.boneyard.length > 0 ? "block" : "none";
+
+  // Render board
+  game.board.forEach((tile, index) => {
+    if (tile) {
+      const tileDiv = document.createElement("div");
+      tileDiv.className = `tile ${tile.color}`;
+      tileDiv.textContent = `${tile.left}|${tile.right}`;
+      tileDiv.style.left = `${tile.x}px`;
+      tileDiv.style.top = `${tile.y}px`;
+      tileDiv.style.transform = `rotate(${tile.rotation}deg)`;
+      boardDiv.appendChild(tileDiv);
     }
-  }
+  });
+
+  // Render valid placement spots
+  game.validPlacements.forEach(spot => {
+    const spotDiv = document.createElement("div");
+    spotDiv.className = "valid-spot";
+    spotDiv.style.left = `${spot.x}px`;
+    spotDiv.style.top = `${spot.y}px`;
+    spotDiv.onclick = () => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        info.textContent = "Não conectado ao servidor. Tente recarregar.";
+        return;
+      }
+      ws.send(JSON.stringify({ type: "place", tileIndex: game.selectedTile, spotIndex: spot.index, player }));
+    };
+    boardDiv.appendChild(spotDiv);
+  });
+
+  // Render player's hand
+  const playerHand = game.hands[player] || [];
+  playerHand.forEach((tile, index) => {
+    const tileDiv = document.createElement("div");
+    tileDiv.className = `tile ${player === "Ewerton" ? "black" : "yellow"} ${game.selectedTile === index && game.turn === player ? "selected" : ""}`;
+    tileDiv.textContent = `${tile.left}|${tile.right}`;
+    tileDiv.onclick = () => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        info.textContent = "Não conectado ao servidor. Tente recarregar.";
+        return;
+      }
+      if (game.turn === player) {
+        ws.send(JSON.stringify({ type: "select", index, player }));
+      }
+    };
+    handDiv.appendChild(tileDiv);
+  });
 
   if (game.winner) {
     info.textContent = `${game.winner} venceu! Reiniciando...`;
@@ -72,10 +105,22 @@ function render(game) {
       ws.send(JSON.stringify({ type: "reset" }));
     }, 3000);
   } else {
-    if (game.turn === player) {
-      info.textContent = `Vez do ${player}`;
-    } else {
-      info.textContent = `Vez do ${game.turn}`;
-    }
+    info.textContent = game.turn === player ? `Sua vez, ${player}` : `Vez de ${game.turn}`;
   }
+}
+
+function getValidPlacements(board, tile) {
+  if (!board || board.length === 0) {
+    return [{ index: 0, x: 300, y: 300, side: "left", flip: false }];
+  }
+  const placements = [];
+  const leftEnd = board[0].left;
+  const rightEnd = board[board.length - 1].right;
+  if (tile.left === leftEnd || tile.right === leftEnd) {
+    placements.push({ index: 0, x: board[0].x - 60, y: board[0].y, side: "left", flip: tile.right === leftEnd });
+  }
+  if (tile.left === rightEnd || tile.right === rightEnd) {
+    placements.push({ index: board.length, x: board[board.length - 1].x + 60, y: board[board.length - 1].y, side: "right", flip: tile.left === rightEnd });
+  }
+  return placements;
 }

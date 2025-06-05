@@ -1,9 +1,10 @@
 :root {
-  --primary: #800080;
+  --primary: #FFD700;
   --background: #121212;
   --text: #fff;
   --border-radius: 12px;
-  --cell-size: 60px;
+  --tile-width: 60px;
+  --tile-height: 30px;
   --light-square: #f0d9b5;
   --dark-square: #b58863;
 }
@@ -44,14 +45,14 @@ body {
 .container {
   z-index: 2;
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
 }
 
 .card {
   background-color: #1e1e1e;
   padding: 30px;
   border-radius: var(--border-radius);
-  box-shadow: 0 0 15px rgba(128, 0, 128, 0.5);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
   text-align: center;
   animation: fadeIn 0.6s ease-in-out;
 }
@@ -79,59 +80,61 @@ button:hover {
 }
 
 #board {
-  display: grid;
-  grid-template-columns: repeat(8, var(--cell-size));
-  grid-gap: 2px;
+  position: relative;
+  min-height: 400px;
+  background-color: var(--dark-square);
+  border-radius: var(--border-radius);
+  margin-top: 20px;
+  overflow: auto;
+}
+
+#player-hand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   justify-content: center;
   margin-top: 20px;
 }
 
-.cell {
-  width: var(--cell-size);
-  height: var(--cell-size);
+#boneyard {
+  margin: 10px 0;
+  font-size: 16px;
+  color: var(--primary);
+}
+
+.tile {
+  width: var(--tile-width);
+  height: var(--tile-height);
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  background-color: var(--light-square);
-}
-
-.cell.dark {
-  background-color: var(--dark-square);
-}
-
-.piece {
-  width: 80%;
-  height: 80%;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: bold;
+  position: absolute;
+  cursor: pointer;
 }
 
-.piece.black {
+.tile.black {
   background-color: #000;
   color: #fff;
 }
 
-.piece.purple {
-  background-color: #800080;
-  color: #fff;
+.tile.yellow {
+  background-color: #FFD700;
+  color: #000;
 }
 
-.piece.king::after {
-  content: "K";
-  font-size: 16px;
-}
-
-.cell.selected {
-  background-color: #993399;
-}
-
-.cell.valid-move {
+.tile.selected {
   background-color: #33ff33;
+}
+
+.valid-spot {
+  width: var(--tile-width);
+  height: var(--tile-height);
+  background-color: #33ff33;
+  opacity: 0.5;
+  position: absolute;
   cursor: pointer;
 }
 
@@ -142,7 +145,8 @@ button:hover {
 
 @media (max-width: 480px) {
   :root {
-    --cell-size: 40px;
+    --tile-width: 40px;
+    --tile-height: 20px;
   }
 
   button {
@@ -150,11 +154,11 @@ button:hover {
     margin: 10px 0;
   }
 
-  #board {
-    grid-gap: 1px;
-  }
-
   .card {
     padding: 20px;
+  }
+
+  .tile {
+    font-size: 12px;
   }
 }

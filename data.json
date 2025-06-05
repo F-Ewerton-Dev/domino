@@ -1,18 +1,13 @@
 {
-  "players": ["Ewerton", "Hellen"],
+  "players": [],
   "turn": "Ewerton",
-  "board": [
-    null, { "color": "black", "row": 0, "col": 1, "isKing": false }, null, { "color": "black", "row": 0, "col": 3, "isKing": false }, null, { "color": "black", "row": 0, "col": 5, "isKing": false }, null, { "color": "black", "row": 0, "col": 7, "isKing": false },
-    { "color": "black", "row": 1, "col": 0, "isKing": false }, null, { "color": "black", "row": 1, "col": 2, "isKing": false }, null, { "color": "black", "row": 1, "col": 4, "isKing": false }, null, { "color": "black", "row": 1, "col": 6, "isKing": false }, null,
-    null, { "color": "black", "row": 2, "col": 1, "isKing": false }, null, { "color": "black", "row": 2, "col": 3, "isKing": false }, null, { "color": "black", "row": 2, "col": 5, "isKing": false }, null, { "color": "black", "row": 2, "col": 7, "isKing": false },
-    null, null, null, null, null, null, null, null,
-    null, null, null, null, null, null, null, null,
-    { "color": "purple", "row": 5, "col": 0, "isKing": false }, null, { "color": "purple", "row": 5, "col": 2, "isKing": false }, null, { "color": "purple", "row": 5, "col": 4, "isKing": false }, null, { "color": "purple", "row": 5, "col": 6, "isKing": false }, null,
-    null, { "color": "purple", "row": 6, "col": 1, "isKing": false }, null, { "color": "purple", "row": 6, "col": 3, "isKing": false }, null, { "color": "purple", "row": 6, "col": 5, "isKing": false }, null, { "color": "purple", "row": 6, "col": 7, "isKing": false },
-    { "color": "purple", "row": 7, "col": 0, "isKing": false }, null, { "color": "purple", "row": 7, "col": 2, "isKing": false }, null, { "color": "purple", "row": 7, "col": 4, "isKing": false }, null, { "color": "purple", "row": 7, "col": 6, "isKing": false }, null
-  ],
+  "board": [],
+  "hands": {
+    "Ewerton": [],
+    "Hellen": []
+  },
+  "boneyard": [],
   "winner": null,
-  "selectedPiece": null,
-  "validMoves": [],
-  "validCaptures": []
+  "selectedTile": null,
+  "validPlacements": []
 }
