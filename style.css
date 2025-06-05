@@ -57,9 +57,13 @@ body {
   animation: fadeIn 0.6s ease-in-out;
 }
 
-h1, h2 {
+h1, h2, h3 {
   margin-bottom: 20px;
   color: var(--primary);
+}
+
+h3 {
+  font-size: 16px;
 }
 
 button {
@@ -88,12 +92,15 @@ button:hover {
   overflow: auto;
 }
 
-#player-hand {
+.hand {
+  margin-top: 20px;
+}
+
+#player-tiles, #opponent-tiles {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   justify-content: center;
-  margin-top: 20px;
 }
 
 #boneyard {
@@ -111,8 +118,8 @@ button:hover {
   justify-content: center;
   font-size: 14px;
   font-weight: bold;
-  position: absolute;
   cursor: pointer;
+  transition: left 0.5s ease, top 0.5s ease;
 }
 
 .tile.black {
@@ -126,7 +133,15 @@ button:hover {
 }
 
 .tile.selected {
+  border: 2px solid #33ff33;
+}
+
+.tile.valid {
   background-color: #33ff33;
+}
+
+.tile.invalid {
+  opacity: 0.5;
 }
 
 .valid-spot {
@@ -136,6 +151,10 @@ button:hover {
   opacity: 0.5;
   position: absolute;
   cursor: pointer;
+}
+
+.animate-placement {
+  transition: left 0.5s ease, top 0.5s ease;
 }
 
 @keyframes fadeIn {

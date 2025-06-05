@@ -1,6 +1,7 @@
 let player = null;
 const boardDiv = document.getElementById("board");
-const handDiv = document.getElementById("player-hand");
+const playerTilesDiv = document.getElementById("player-tiles");
+const opponentTilesDiv = document.getElementById("opponent-tiles");
 const info = document.getElementById("info");
 const boneyardCount = document.getElementById("boneyard-count");
 const drawButton = document.getElementById("draw-button");
@@ -45,23 +46,33 @@ function drawTile() {
 
 function render(game) {
   boardDiv.innerHTML = "";
-  handDiv.innerHTML = "";
+  playerTilesDiv.innerHTML = "";
+  opponentTilesDiv.innerHTML = "";
   boneyardCount.textContent = game.boneyard.length;
 
   // Show draw button if it's player's turn and no valid moves
   const canPlay = game.hands[player]?.some(tile => getValidPlacements(game.board, tile).length > 0);
   drawButton.style.display = game.turn === player && !canPlay && game.boneyard.length > 0 ? "block" : "none";
 
-  // Render board
+  // Render board with animation
   game.board.forEach((tile, index) => {
     if (tile) {
       const tileDiv = document.createElement("div");
       tileDiv.className = `tile ${tile.color}`;
       tileDiv.textContent = `${tile.left}|${tile.right}`;
-      tileDiv.style.left = `${tile.x}px`;
-      tileDiv.style.top = `${tile.y}px`;
+      tileDiv.style.left = `${tile.startX || tile.x}px`;
+      tileDiv.style.top = `${tile.startY || tile.y}px`;
       tileDiv.style.transform = `rotate(${tile.rotation}deg)`;
+      tileDiv.dataset.finalX = tile.x;
+      tileDiv.dataset.finalY = tile.y;
+      tileDiv.classList.add("animate-placement");
       boardDiv.appendChild(tileDiv);
+
+      // Trigger animation
+      setTimeout(() => {
+        tileDiv.style.left = `${tile.x}px`;
+        tileDiv.style.top = `${tile.y}px`;
+      }, 10);
     }
   });
 
@@ -85,7 +96,8 @@ function render(game) {
   const playerHand = game.hands[player] || [];
   playerHand.forEach((tile, index) => {
     const tileDiv = document.createElement("div");
-    tileDiv.className = `tile ${player === "Ewerton" ? "black" : "yellow"} ${game.selectedTile === index && game.turn === player ? "selected" : ""}`;
+    const isValid = game.turn === player && getValidPlacements(game.board, tile).length > 0;
+    tileDiv.className = `tile ${player === "Ewerton" ? "black" : "yellow"} ${game.selectedTile === index && game.turn === player ? "selected" : ""} ${isValid ? "valid" : "invalid"}`;
     tileDiv.textContent = `${tile.left}|${tile.right}`;
     tileDiv.onclick = () => {
       if (!ws || ws.readyState !== WebSocket.OPEN) {
@@ -96,7 +108,17 @@ function render(game) {
         ws.send(JSON.stringify({ type: "select", index, player }));
       }
     };
-    handDiv.appendChild(tileDiv);
+    playerTilesDiv.appendChild(tileDiv);
+  });
+
+  // Render opponent's hand
+  const opponent = player === "Ewerton" ? "Hellen" : "Ewerton";
+  const opponentHand = game.hands[opponent] || [];
+  opponentHand.forEach((tile) => {
+    const tileDiv = document.createElement("div");
+    tileDiv.className = `tile ${opponent === "Ewerton" ? "black" : "yellow"}`;
+    tileDiv.textContent = `${tile.left}|${tile.right}`;
+    opponentTilesDiv.appendChild(tileDiv);
   });
 
   if (game.winner) {

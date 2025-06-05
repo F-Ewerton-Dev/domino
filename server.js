@@ -65,10 +65,10 @@ function resetGame() {
   gameState = {
     board: [],
     hands: {
-      Ewerton: tiles.slice(0, 6),
-      Hellen: tiles.slice(6, 12)
+      Ewerton: tiles.slice(0, 7),
+      Hellen: tiles.slice(7, 14)
     },
-    boneyard: tiles.slice(12),
+    boneyard: tiles.slice(14),
     turn: nextStarter,
     winner: null,
     selectedTile: null,
@@ -96,7 +96,7 @@ wss.on("connection", (ws) => {
         gameState.players.push(data.player);
         ws.player = data.player;
         if (gameState.players.length === 2 && !gameState.hands.Ewerton.length) {
-          resetGame(); // Distribute tiles when both players are connected
+          resetGame(); // Distribute 7 tiles per player when both are connected
         }
         broadcastGameState();
       } else {
@@ -118,7 +118,15 @@ wss.on("connection", (ws) => {
       const tile = gameState.hands[data.player][data.tileIndex];
       const placement = gameState.validPlacements.find(p => p.index === data.spotIndex);
       if (tile && placement) {
-        const newTile = { ...tile, x: placement.x, y: placement.y, rotation: 0, color: data.player === "Ewerton" ? "black" : "yellow" };
+        const newTile = {
+          ...tile,
+          x: placement.x,
+          y: placement.y,
+          startX: 300, // Starting position for animation (center of hand)
+          startY: 500,
+          rotation: 0,
+          color: data.player === "Ewerton" ? "black" : "yellow"
+        };
         if (placement.flip) [newTile.left, newTile.right] = [newTile.right, newTile.left];
         if (placement.side === "left") {
           gameState.board.unshift(newTile);
@@ -135,12 +143,12 @@ wss.on("connection", (ws) => {
     }
 
     if (data.type === "draw" && !gameState.winner && data.player === gameState.turn) {
-      if (gameState.boneyard.length > 0) {
+      const canPlay = gameState.hands[data.player].some(t => getValidPlacements(gameState.board, t).length > 0);
+      if (!canPlay && gameState.boneyard.length > 0) {
         const tile = gameState.boneyard.shift();
-        gameState$hands[data.player].push(tile);
-        // Check if the drawn tile can be played
-        const canPlay = gameState.hands[data.player].some(t => getValidPlacements(gameState.board, t).length > 0);
-        if (!canPlay && gameState.boneyard.length > 0) {
+        gameState.hands[data.player].push(tile);
+        const canPlayAfterDraw = gameState.hands[data.player].some(t => getValidPlacements(gameState.board, t).length > 0);
+        if (!canPlayAfterDraw && gameState.boneyard.length > 0) {
           // Player still can't play, keep their turn
         } else {
           gameState.turn = gameState.turn === "Ewerton" ? "Hellen" : "Ewerton";
