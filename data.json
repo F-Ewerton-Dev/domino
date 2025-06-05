@@ -1,0 +1,12 @@
+{
+  "players": [],
+  "turn": "Ewerton",
+  "board": [],
+  "hands": {
+    "Ewerton": [],
+    "Hellen": []
+  },
+  "winner": null,
+  "selectedTile": null,
+  "validPlacements": []
+}
