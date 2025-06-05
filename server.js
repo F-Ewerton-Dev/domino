@@ -36,10 +36,10 @@ function getValidPlacements(board, tile) {
   const leftEnd = board[0].left;
   const rightEnd = board[board.length - 1].right;
   if (tile.left === leftEnd || tile.right === leftEnd) {
-    placements.push({ index: 0, x: board[0].x - 60, y: board[0].y, side: "left", flip: tile.right === leftEnd });
+    placements.push({ index: 0, x: board[0].x - 60, y: 300, side: "left", flip: tile.right === leftEnd });
   }
   if (tile.left === rightEnd || tile.right === rightEnd) {
-    placements.push({ index: board.length, x: board[board.length - 1].x + 60, y: board[board.length - 1].y, side: "right", flip: tile.left === rightEnd });
+    placements.push({ index: board.length, x: board[board.length - 1].x + 60, y: 300, side: "right", flip: tile.left === rightEnd });
   }
   return placements;
 }
@@ -122,7 +122,7 @@ wss.on("connection", (ws) => {
           ...tile,
           x: placement.x,
           y: placement.y,
-          startX: 300, // Starting position for animation (center of hand)
+          startX: data.tileIndex * 70 + 20, // Start from hand position
           startY: 500,
           rotation: 0,
           color: data.player === "Ewerton" ? "black" : "yellow"

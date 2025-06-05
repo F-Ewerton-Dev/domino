@@ -89,18 +89,22 @@ button:hover {
   background-color: var(--dark-square);
   border-radius: var(--border-radius);
   margin-top: 20px;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
 }
 
 .hand {
   margin-top: 20px;
 }
 
-#player-tiles, #opponent-tiles {
+.tile-grid {
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
   justify-content: center;
+  width: 510px; /* 7 tiles * 60px + 6 gaps * 10px + 20px padding */
+  height: var(--tile-height);
+  position: relative;
 }
 
 #boneyard {
@@ -119,6 +123,7 @@ button:hover {
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
+  position: absolute;
   transition: left 0.5s ease, top 0.5s ease;
 }
 
@@ -166,6 +171,10 @@ button:hover {
   :root {
     --tile-width: 40px;
     --tile-height: 20px;
+  }
+
+  .tile-grid {
+    width: 340px; /* 7 tiles * 40px + 6 gaps * 10px */
   }
 
   button {

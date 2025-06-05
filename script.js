@@ -1,7 +1,7 @@
 let player = null;
 const boardDiv = document.getElementById("board");
 const playerTilesDiv = document.getElementById("player-tiles");
-const opponentTilesDiv = document.getElementById("opponent-tiles");
+const opponentCountSpan = document.getElementById("opponent-count");
 const info = document.getElementById("info");
 const boneyardCount = document.getElementById("boneyard-count");
 const drawButton = document.getElementById("draw-button");
@@ -47,21 +47,22 @@ function drawTile() {
 function render(game) {
   boardDiv.innerHTML = "";
   playerTilesDiv.innerHTML = "";
-  opponentTilesDiv.innerHTML = "";
+  const opponent = player === "Ewerton" ? "Hellen" : "Ewerton";
+  opponentCountSpan.textContent = (game.hands[opponent] || []).length;
   boneyardCount.textContent = game.boneyard.length;
 
   // Show draw button if it's player's turn and no valid moves
   const canPlay = game.hands[player]?.some(tile => getValidPlacements(game.board, tile).length > 0);
   drawButton.style.display = game.turn === player && !canPlay && game.boneyard.length > 0 ? "block" : "none";
 
-  // Render board with animation
+  // Render board with precise positions and animation
   game.board.forEach((tile, index) => {
     if (tile) {
       const tileDiv = document.createElement("div");
       tileDiv.className = `tile ${tile.color}`;
       tileDiv.textContent = `${tile.left}|${tile.right}`;
       tileDiv.style.left = `${tile.startX || tile.x}px`;
-      tileDiv.style.top = `${tile.startY || tile.y}px`;
+      tileDiv.style.top = `${tile.y}px`;
       tileDiv.style.transform = `rotate(${tile.rotation}deg)`;
       tileDiv.dataset.finalX = tile.x;
       tileDiv.dataset.finalY = tile.y;
@@ -92,34 +93,27 @@ function render(game) {
     boardDiv.appendChild(spotDiv);
   });
 
-  // Render player's hand
+  // Render player's hand in fixed grid (7 slots)
   const playerHand = game.hands[player] || [];
-  playerHand.forEach((tile, index) => {
+  for (let i = 0; i < 7; i++) {
+    const tile = playerHand[i];
     const tileDiv = document.createElement("div");
-    const isValid = game.turn === player && getValidPlacements(game.board, tile).length > 0;
-    tileDiv.className = `tile ${player === "Ewerton" ? "black" : "yellow"} ${game.selectedTile === index && game.turn === player ? "selected" : ""} ${isValid ? "valid" : "invalid"}`;
-    tileDiv.textContent = `${tile.left}|${tile.right}`;
-    tileDiv.onclick = () => {
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
-        info.textContent = "Não conectado ao servidor. Tente recarregar.";
-        return;
-      }
-      if (game.turn === player) {
-        ws.send(JSON.stringify({ type: "select", index, player }));
-      }
-    };
+    tileDiv.className = `tile ${player === "Ewerton" ? "black" : "yellow"} ${game.selectedTile === i && game.turn === player ? "selected" : ""} ${tile && game.turn === player && getValidPlacements(game.board, tile).length > 0 ? "valid" : tile ? "invalid" : ""}`;
+    tileDiv.style.left = `${i * 70 + 20}px`; // Fixed position: 20px offset + 70px per slot
+    tileDiv.textContent = tile ? `${tile.left}|${tile.right}` : "";
+    if (tile) {
+      tileDiv.onclick = () => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          info.textContent = "Não conectado ao servidor. Tente recarregar.";
+          return;
+        }
+        if (game.turn === player) {
+          ws.send(JSON.stringify({ type: "select", index: i, player }));
+        }
+      };
+    }
     playerTilesDiv.appendChild(tileDiv);
-  });
-
-  // Render opponent's hand
-  const opponent = player === "Ewerton" ? "Hellen" : "Ewerton";
-  const opponentHand = game.hands[opponent] || [];
-  opponentHand.forEach((tile) => {
-    const tileDiv = document.createElement("div");
-    tileDiv.className = `tile ${opponent === "Ewerton" ? "black" : "yellow"}`;
-    tileDiv.textContent = `${tile.left}|${tile.right}`;
-    opponentTilesDiv.appendChild(tileDiv);
-  });
+  }
 
   if (game.winner) {
     info.textContent = `${game.winner} venceu! Reiniciando...`;
@@ -139,10 +133,10 @@ function getValidPlacements(board, tile) {
   const leftEnd = board[0].left;
   const rightEnd = board[board.length - 1].right;
   if (tile.left === leftEnd || tile.right === leftEnd) {
-    placements.push({ index: 0, x: board[0].x - 60, y: board[0].y, side: "left", flip: tile.right === leftEnd });
+    placements.push({ index: 0, x: board[0].x - 60, y: 300, side: "left", flip: tile.right === leftEnd });
   }
   if (tile.left === rightEnd || tile.right === rightEnd) {
-    placements.push({ index: board.length, x: board[board.length - 1].x + 60, y: board[board.length - 1].y, side: "right", flip: tile.left === rightEnd });
+    placements.push({ index: board.length, x: board[board.length - 1].x + 60, y: 300, side: "right", flip: tile.left === rightEnd });
   }
   return placements;
 }

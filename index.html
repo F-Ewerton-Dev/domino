@@ -19,14 +19,13 @@
       <h1>Jogo de Dominó</h1>
       <div id="info">Conectando ao servidor...</div>
       <div id="boneyard">Pilha: <span id="boneyard-count">0</span> peças</div>
-      <button id="draw-button" onclick="drawTile()" style="display: none;">Pegar da Pilha</button>
       <div id="opponent-hand" class="hand">
-        <h3>Mão do Oponente</h3>
-        <div id="opponent-tiles"></div>
+        <h3>Mão do Oponente: <span id="opponent-count">0</span> peças</h3>
       </div>
+      <button id="draw-button" onclick="drawTile()" style="display: none;">Pegar da Pilha</button>
       <div id="player-hand" class="hand">
         <h3>Sua Mão</h3>
-        <div id="player-tiles"></div>
+        <div id="player-tiles" class="tile-grid"></div>
       </div>
       <div id="board"></div>
     </div>
